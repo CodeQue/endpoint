@@ -1,5 +1,5 @@
 <?php
-
+ob_end_clean();
 $receivedPost = json_decode(file_get_contents('php://input'), true);
 // check acceptable incoming action
 // action - create
@@ -24,10 +24,11 @@ if ($receivedPost['action'] == 'create') {
 		empty($receivedPost['dob'])
 	) {
 		// return an errror, parameters provided is insufficient
-		die json_encode([
-			"responseCode" => 400,
-			"responseMeaning" => "Bad Request - ALl Parameters are required"
-		]);
+		header('Content-Type: application/json');
+		die (json_encode([
+					"responseCode" => 400,
+					"respons)eMeaning" => "Bad Request - ALl Parameters are required"
+		]));
 	} else  {
 		// authentication checks completed
 		// filter contents
@@ -50,15 +51,20 @@ if ($receivedPost['action'] == 'create') {
 			$response = [];
 			$response['responseCode'] = 200;
 			$response['data']['staffid'] = $staffid;
-			die json_encode([
+
+
+			header('Content-Type: application/json');
+			die (json_encode([
 				"responseCode" => 200,
 				"staffid" => $staffid
-			]);
+			]));
 		} else {
-			die json_encode([
+
+			header('Content-Type: application/json');
+			die (json_encode([
 				"responseCode" => 500,
 				"responseMeaning" => 'Internal Server Error - Your request could not be completed'
-			]);
+			]));
 		}
 
 	}
@@ -69,10 +75,12 @@ if ($receivedPost['action'] == 'create') {
 	$staffid = addslashes($receivedPost['staffId']);
 	// check if staff details exists in database
 	if (empty($staffid)) {
-		die json_encode([
+
+		header('Content-Type: application/json');
+		die (json_encode([
 			"responseCode" => 400,
 			"responseMeaning" => "Bad Request - ALl Parameters are required"
-		]);
+		]));
 	}
 
 	$query = "SELECT staff_data->>'$.status' FROM staffrecords.staffdetails WHERE staff_uid = '$staffid'";
@@ -80,24 +88,30 @@ if ($receivedPost['action'] == 'create') {
 	// check status to see if status is already disabled
 	// to prevent another database call
 	if ( $query ) {
-		die json_encode([
+
+		header('Content-Type: application/json');
+		die (json_encode([
 			"responseCode" => 200,
 			"message" => "Staff if {$staffid} disabled successfully"
-		]);
+		]));
 	} else {
 		// disable data
 		$updateQuery = "UPDATE staffdetails SET staff_data = JSON_REPLACE(staff_data, '$.status', 'false')";
 		$updateQuery = dbQuery ($updateQuery);
 		if ($updateQuery) {
-			die json_encode([
+
+		header('Content-Type: application/json');
+			die (json_encode([
 				"responseCode" => 200,
 				"message" => "Staff if {$staffid} disabled successfully"
-			]);
+			]));
 		} else {
-			die json_encode([
+
+		header('Content-Type: application/json');
+			die (json_encode([
 				"responseCode" => 500,
 				"responseMeaning" => 'Internal Server Error - Your request could not be completed'
-			]);
+			]));
 		}
 	}
 } else if ($receivedPost['action'] == 'delete') {
@@ -107,10 +121,12 @@ if ($receivedPost['action'] == 'create') {
 	$staffid = addslashes($receivedPost['staffId']);
 	// check if staff details exists in database
 	if (empty($staffid)) {
-		die json_encode([
+
+		header('Content-Type: application/json');
+		die (json_encode([
 			"responseCode" => 400,
 			"responseMeaning" => "Bad Request - ALl Parameters are required"
-		]);
+		]));
 	}
 	$query = "SELECT staff_uid FROM staffrecords.staffdetails WHERE staff_uid = '$staffid'";
 	$query = selectQuery ($query);
@@ -120,40 +136,50 @@ if ($receivedPost['action'] == 'create') {
 		$deleteQuery = "DELETE FROM staffrecords.staffdetails WHERE staff_uid = '$staffid'";
 		$deleteQuery = dbQuery($deleteQuery);
 		if ($deleteQuery) {
-			die json_encode([
+
+		header('Content-Type: application/json');
+			die (json_encode([
 				"responseCode" => 200,
 				"message" => "Staff if {$staffid} deleted successfully"
-			]);
+			]));
 		}
 	}else {
-		die json_encode([
+
+		header('Content-Type: application/json');
+		die (json_encode([
 			"responseCode" => 400,
 			"responseMeaning" => "Bad Request - No record found for id - {$staffid}"
-		]);
+		]));
 	}
 
 } else if ($receivedPost['action'] == 'search') {
 	// searchable by staff id
 	$staffid = addslashes($receivedPost['staffid']);
 	if (empty($staffid)) {
-		die json_encode([
+
+		header('Content-Type: application/json');
+		die (json_encode([
 			"responseCode" => 400,
 			"responseMeaning" => "Bad Request - ALl Parameters are required"
-		]);
+		]));
 	}
 	$query = "SELECT staff_uid, staff_data FROM staffrecords.staffdetails WHERE staff_uid = '$staffid'";
 	$query = selectQuery ($query);
 	if ($query['staff_uid']) {
-		die json_encode([
+
+		header('Content-Type: application/json');
+		die (json_encode([
 			"responseCode" => 200,
 			"data" => $query['staff_data']
-		]);	
+		]));	
 	} else {
+
+		header('Content-Type: application/json');
 		// no records found
-		die json_encode([
+		die (json_encode([
 			"responseCode" => 400,
 			"responseMeaning" => "Bad Request - No record found for id - {$staffid}"
-		]);
+		]));
 	}
 } else if ($receivedPost['action'] == 'getStaff') {
 	// acceptable
@@ -162,16 +188,17 @@ if ($receivedPost['action'] == 'create') {
 	if (is_int($applicableLimits)) {
 		$selectQuery = "SELECT staff_data FROM staffrecords.staffdetails LIMIT $applicableLimits";
 		$selectQuery = selectQuery($selectQuery);
-		
-		die json_encode([
+		header('Content-Type: application/json');
+		die (json_encode([
 			"responseCode" => 400,
-			"responseMeaning" => $selectQuery['staff_data'];
-		]);
+			"responseMeaning" => $selectQuery['staff_data']
+		]));
 	} else {
-		die json_encode([
+		header('Content-Type: application/json');
+		die (json_encode([
 			"responseCode" => 400,
 			"responseMeaning" => "Bad Request - Only integers are accepted for this endpoint"
-		]);
+		]));
 	}
 }
 
@@ -210,7 +237,7 @@ function selectQuery ($query) {
 	$connection = dbConnection();
 	if ( $connection ) {
 		$data = mysqli_query($connection, $query);
-		$data = mysqli_fetch_assoc($data)
+		$data = mysqli_fetch_assoc($data);
 		return $data;
 	}else return false;
 }
