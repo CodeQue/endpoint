@@ -43,7 +43,7 @@ if ($receivedPost['action'] == 'create') {
 		$staffDetails['status'] = true; // used to handle staff enabled status
 
 		$staffDetails = json_encode($staffDetails);
-		$insertQuery = "INSERT INTO staffrecords.staffdetails (staff_uid, staff_json) VALUES ('$staffid', '$staffDetails')";
+		$insertQuery = "INSERT INTO staffrecords.staffdetails (staff_uid, staff_data) VALUES ('$staffid', '$staffDetails')";
 
 		// database connection
 		if (insertQuery($insertQuery)) {
@@ -205,13 +205,10 @@ if ($receivedPost['action'] == 'create') {
 
 function dbConnection () {
 	$servername = "localhost";
-	$username = "root";
-	$password = "your_password";
+	$username = "localHost";
+	$password = "Utuk1j0VP@.";
 	$conn = new mysqli($servername, $username, $password);
-	// Check connection
-	if ($conn) {
-	    return $conn;
-	} else return false;
+	return $conn;
 
 }
 
