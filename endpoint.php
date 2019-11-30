@@ -1,5 +1,6 @@
 <?php
 ob_end_clean();
+header('Content-Type: application/json');
 $receivedPost = json_decode(file_get_contents('php://input'), true);
 // check acceptable incoming action
 // action - create
@@ -24,7 +25,7 @@ if ($receivedPost['action'] == 'create') {
 		empty($receivedPost['dob'])
 	) {
 		// return an errror, parameters provided is insufficient
-		header('Content-Type: application/json');
+		
 		die (json_encode([
 					"responseCode" => 400,
 					"respons)eMeaning" => "Bad Request - ALl Parameters are required"
@@ -53,14 +54,14 @@ if ($receivedPost['action'] == 'create') {
 			$response['data']['staffid'] = $staffid;
 
 
-			header('Content-Type: application/json');
+			
 			die (json_encode([
 				"responseCode" => 200,
 				"staffid" => $staffid
 			]));
 		} else {
 
-			header('Content-Type: application/json');
+			
 			die (json_encode([
 				"responseCode" => 500,
 				"responseMeaning" => 'Internal Server Error - Your request could not be completed'
@@ -76,38 +77,38 @@ if ($receivedPost['action'] == 'create') {
 	// check if staff details exists in database
 	if (empty($staffid)) {
 
-		header('Content-Type: application/json');
+		
 		die (json_encode([
 			"responseCode" => 400,
 			"responseMeaning" => "Bad Request - ALl Parameters are required"
 		]));
 	}
 
-	$query = "SELECT staff_data->>'$.status' FROM staffrecords.staffdetails WHERE staff_uid = '$staffid'";
+	$query = "SELECT JSON_EXTRACT(staff_data, '$.status') FROM staffrecords.staffdetails WHERE staff_uid = '$staffid'";
 	$query = selectQuery ($query);
 	// check status to see if status is already disabled
 	// to prevent another database call
 	if ( $query ) {
 
-		header('Content-Type: application/json');
+		
 		die (json_encode([
 			"responseCode" => 200,
 			"message" => "Staff if {$staffid} disabled successfully"
 		]));
 	} else {
 		// disable data
-		$updateQuery = "UPDATE staffdetails SET staff_data = JSON_REPLACE(staff_data, '$.status', 'false')";
+		$updateQuery = "UPDATE staffrecords.staffdetails SET staff_data = JSON_REPLACE(staff_data, '$.status', 'false') WHERE staff_uid = '$staffid' ";
 		$updateQuery = dbQuery ($updateQuery);
 		if ($updateQuery) {
 
-		header('Content-Type: application/json');
+		
 			die (json_encode([
 				"responseCode" => 200,
 				"message" => "Staff if {$staffid} disabled successfully"
 			]));
 		} else {
 
-		header('Content-Type: application/json');
+		
 			die (json_encode([
 				"responseCode" => 500,
 				"responseMeaning" => 'Internal Server Error - Your request could not be completed'
@@ -122,7 +123,7 @@ if ($receivedPost['action'] == 'create') {
 	// check if staff details exists in database
 	if (empty($staffid)) {
 
-		header('Content-Type: application/json');
+		
 		die (json_encode([
 			"responseCode" => 400,
 			"responseMeaning" => "Bad Request - ALl Parameters are required"
@@ -137,7 +138,7 @@ if ($receivedPost['action'] == 'create') {
 		$deleteQuery = dbQuery($deleteQuery);
 		if ($deleteQuery) {
 
-		header('Content-Type: application/json');
+		
 			die (json_encode([
 				"responseCode" => 200,
 				"message" => "Staff if {$staffid} deleted successfully"
@@ -145,7 +146,7 @@ if ($receivedPost['action'] == 'create') {
 		}
 	}else {
 
-		header('Content-Type: application/json');
+		
 		die (json_encode([
 			"responseCode" => 400,
 			"responseMeaning" => "Bad Request - No record found for id - {$staffid}"
@@ -157,7 +158,7 @@ if ($receivedPost['action'] == 'create') {
 	$staffid = addslashes($receivedPost['staffid']);
 	if (empty($staffid)) {
 
-		header('Content-Type: application/json');
+		
 		die (json_encode([
 			"responseCode" => 400,
 			"responseMeaning" => "Bad Request - ALl Parameters are required"
@@ -167,14 +168,14 @@ if ($receivedPost['action'] == 'create') {
 	$query = selectQuery ($query);
 	if ($query['staff_uid']) {
 
-		header('Content-Type: application/json');
+		
 		die (json_encode([
 			"responseCode" => 200,
 			"data" => $query['staff_data']
 		]));	
 	} else {
 
-		header('Content-Type: application/json');
+		
 		// no records found
 		die (json_encode([
 			"responseCode" => 400,
@@ -185,16 +186,16 @@ if ($receivedPost['action'] == 'create') {
 	// acceptable
 	// limits - limit is expected to be an integer
 	$applicableLimits = addslashes($receivedPost['limits']);
-	if (is_int($applicableLimits)) {
+	if ($applicableLimits) {
 		$selectQuery = "SELECT staff_data FROM staffrecords.staffdetails LIMIT $applicableLimits";
 		$selectQuery = selectQuery($selectQuery);
-		header('Content-Type: application/json');
+		
 		die (json_encode([
 			"responseCode" => 400,
 			"responseMeaning" => $selectQuery['staff_data']
 		]));
 	} else {
-		header('Content-Type: application/json');
+		
 		die (json_encode([
 			"responseCode" => 400,
 			"responseMeaning" => "Bad Request - Only integers are accepted for this endpoint"
